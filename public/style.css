@@ -1,0 +1,17 @@
+table {
+  width: 50%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  border: 1px solid #999;
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background-color: #eee;
+}
+button {
+  cursor: pointer;
+  margin-right: 5px;
+}
