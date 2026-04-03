@@ -1,7 +1,54 @@
 import { BASE_URL, API_KEY } from './config.js';
 
-// --- KONFIGURACJA I NAGŁÓWKI ---
+// --- SYSTEM POWIADOMIEŃ (TOASTS) ---
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
+// --- NARZĘDZIA MODALA ---
+function showModal({ title, desc, showInput = false, defaultValue = "" }) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("customModal");
+        const inputContainer = document.getElementById("modalInputContainer");
+        const input = document.getElementById("modalInput");
+        
+        document.getElementById("modalTitle").textContent = title;
+        document.getElementById("modalDescription").textContent = desc;
+        
+        if (showInput) {
+            inputContainer.classList.remove("hidden");
+            input.value = defaultValue;
+            setTimeout(() => input.focus(), 100);
+        } else {
+            inputContainer.classList.add("hidden");
+        }
+
+        modal.classList.remove("hidden");
+
+        const cleanup = (value) => {
+            modal.classList.add("hidden");
+            document.getElementById("modalConfirm").onclick = null;
+            document.getElementById("modalCancel").onclick = null;
+            resolve(value);
+        };
+
+        document.getElementById("modalConfirm").onclick = () => cleanup(showInput ? input.value : true);
+        document.getElementById("modalCancel").onclick = () => cleanup(null);
+    });
+}
+
+// --- KONFIGURACJA I NAGŁÓWKI ---
 function getToken() {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -17,41 +64,65 @@ function authHeaders() {
     };
 }
 
-// --- OBSŁUGA SESJI I KONTA ---
+// --- OBSŁUGA MOTYWU (DARK MODE) ---
+const themeToggle = document.getElementById("themeToggle");
 
+function initTheme() {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+        themeToggle.textContent = "☀️";
+    } else {
+        themeToggle.textContent = "🌙";
+    }
+}
+
+themeToggle.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.toggle("dark-mode");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    themeToggle.textContent = isDark ? "☀️" : "🌙";
+    showToast(`Tryb ${isDark ? "ciemny" : "jasny"} aktywny`);
+});
+
+// --- OBSŁUGA SESJI I KONTA ---
 function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
     window.location.href = "/public/rejestracja.html";
 }
 
-document.getElementById("logoutBtn").addEventListener("click", logout);
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    const confirmed = await showModal({
+        title: "Wylogowanie",
+        desc: "Czy na pewno chcesz się wylogować z aplikacji?"
+    });
+    if (confirmed) logout();
+});
 
 document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
-    const confirmDelete = confirm("UWAGA! Czy na pewno chcesz usunąć konto? Wszystkie zadania zostaną bezpowrotnie skasowane.");
+    const confirmed = await showModal({
+        title: "Usuń konto",
+        desc: "UWAGA! Czy na pewno chcesz usunąć konto? Wszystkie zadania zostaną bezpowrotnie skasowane."
+    });
     
-    if (confirmDelete) {
+    if (confirmed) {
         try {
             const res = await fetch(`${BASE_URL}/auth/user?code=${API_KEY}`, {
                 method: "DELETE",
                 headers: authHeaders()
             });
-
             if (res.ok) {
-                alert("Konto zostało pomyślnie usunięte.");
                 logout();
             } else {
-                const text = await res.text();
-                alert(`Błąd podczas usuwania konta: ${res.status}`);
+                showToast("Błąd podczas usuwania konta", "error");
             }
         } catch (err) {
-            alert("Błąd połączenia z serwerem.");
+            showToast("Błąd połączenia z serwerem", "error");
         }
     }
 });
 
 // --- OBSŁUGA ZADAŃ (API) ---
-
 async function loadTasks() {
     try {
         const res = await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
@@ -64,31 +135,36 @@ async function loadTasks() {
         }
 
         const tasks = await res.json();
-
-        // Sortowanie: nieukończone na górze
         tasks.sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
-        // Aktualizacja licznika
         const total = tasks.length;
         const completed = tasks.filter(t => t.completed).length;
         document.getElementById("counter").textContent = `${completed}/${total} ukończonych`;
 
         renderTasks(tasks);
     } catch (err) {
-        console.error("Błąd pobierania zadań:", err);
+        showToast("Nie udało się pobrać zadań", "error");
     }
 }
 
 async function addTask(title) {
+    const btn = document.getElementById("addBtn");
+    btn.disabled = true;
+
     try {
-        await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
+        const res = await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ title })
         });
-        loadTasks();
+        if (res.ok) {
+            showToast("Zadanie dodane!");
+            loadTasks();
+        }
     } catch (err) {
-        alert("Nie udało się dodać zadania.");
+        showToast("Błąd dodawania zadania", "error");
+    } finally {
+        btn.disabled = false;
     }
 }
 
@@ -101,33 +177,61 @@ async function updateTask(id, data) {
         });
         loadTasks();
     } catch (err) {
-        alert("Błąd aktualizacji zadania.");
+        showToast("Błąd aktualizacji", "error");
     }
 }
 
 async function deleteTask(id) {
-    if (confirm("Usunąć to zadanie?")) {
-        try {
-            await fetch(`${BASE_URL}/tasks/${id}?code=${API_KEY}`, {
-                method: "DELETE",
-                headers: authHeaders()
-            });
-            loadTasks();
-        } catch (err) {
-            alert("Błąd usuwania zadania.");
-        }
+    try {
+        await fetch(`${BASE_URL}/tasks/${id}?code=${API_KEY}`, {
+            method: "DELETE",
+            headers: authHeaders()
+        });
+        showToast("Zadanie usunięte");
+        loadTasks();
+    } catch (err) {
+        showToast("Błąd usuwania", "error");
     }
 }
 
-// --- RENDEROWANIE INTERFEJSU ---
-
+// --- RENDEROWANIE INTERFEJSU (PRO) ---
 function renderTasks(tasks) {
     const listContainer = document.getElementById("tasksList");
+
+    if (tasks.length === 0) {
+        listContainer.innerHTML = `<div class="empty-state">🎉 Czysta karta! Dodaj pierwsze zadanie powyżej.</div>`;
+        return;
+    }
+
+    const currentIds = Array.from(listContainer.querySelectorAll('.task-item')).map(el => el.dataset.id);
+    const newIds = tasks.map(t => String(t.id));
+
+    if (JSON.stringify(currentIds) === JSON.stringify(newIds)) {
+        tasks.forEach(task => {
+            const item = listContainer.querySelector(`[data-id="${task.id}"]`);
+            if (item) {
+                item.className = `task-item ${task.completed ? 'completed' : ''}`;
+                item.querySelector(".checkbox-custom").checked = task.completed;
+            }
+        });
+        return;
+    }
+
     listContainer.innerHTML = "";
 
-    tasks.forEach(task => {
+    tasks.forEach((task, index) => {
         const taskDiv = document.createElement("div");
         taskDiv.className = `task-item ${task.completed ? 'completed' : ''}`;
+        taskDiv.dataset.id = task.id;
+
+        const isFresh = (new Date() - new Date(task.createdAt)) < 5000;
+        if (!isFresh) {
+            taskDiv.style.animation = 'none';
+            taskDiv.style.opacity = '1';
+        } else {
+            taskDiv.classList.add('task-item-animate');
+            taskDiv.style.animationDelay = `${index * 0.05}s`;
+        }
 
         const dateFormatted = task.createdAt 
             ? new Date(task.createdAt).toLocaleString("pl-PL", { dateStyle: 'short', timeStyle: 'short' }) 
@@ -136,9 +240,7 @@ function renderTasks(tasks) {
         taskDiv.innerHTML = `
             <input type="checkbox" class="checkbox-custom" ${task.completed ? 'checked' : ''}>
             <div class="task-content">
-                <span class="task-title" style="${task.completed ? 'text-decoration: line-through' : ''}">
-                    ${task.title}
-                </span>
+                <span class="task-title">${task.title}</span>
                 <span class="task-date">${dateFormatted}</span>
             </div>
             <div class="task-actions">
@@ -147,23 +249,30 @@ function renderTasks(tasks) {
             </div>
         `;
 
-        // Eventy dla checkboxa
         const checkbox = taskDiv.querySelector(".checkbox-custom");
         checkbox.addEventListener("change", () => {
             updateTask(task.id, { completed: checkbox.checked });
         });
 
-        // Event dla edycji
-        taskDiv.querySelector(".edit-btn").addEventListener("click", () => {
-            const newTitle = prompt("Nowa nazwa zadania:", task.title);
-            if (newTitle && newTitle.trim() !== task.title) {
+        taskDiv.querySelector(".edit-btn").addEventListener("click", async () => {
+            const newTitle = await showModal({
+                title: "Edytuj zadanie",
+                desc: "Zmień nazwę zadania:",
+                showInput: true,
+                defaultValue: task.title
+            });
+            if (newTitle && newTitle.trim() !== "" && newTitle.trim() !== task.title) {
                 updateTask(task.id, { title: newTitle.trim() });
+                showToast("Zaktualizowano zadanie");
             }
         });
 
-        // Event dla usuwania
-        taskDiv.querySelector(".delete-btn").addEventListener("click", () => {
-            deleteTask(task.id);
+        taskDiv.querySelector(".delete-btn").addEventListener("click", async () => {
+            const confirmed = await showModal({
+                title: "Usuń zadanie",
+                desc: `Czy na pewno usunąć "${task.title}"?`
+            });
+            if (confirmed) deleteTask(task.id);
         });
 
         listContainer.appendChild(taskDiv);
@@ -171,19 +280,18 @@ function renderTasks(tasks) {
 }
 
 // --- INICJALIZACJA ---
-
 document.getElementById("taskForm").addEventListener("submit", e => {
     e.preventDefault();
     const titleInput = document.getElementById("title");
     const title = titleInput.value.trim();
-    
     if (title) {
         addTask(title);
         titleInput.value = "";
     }
 });
 
-// Ustawienie nazwy użytkownika i start
+// Start aplikacji
+initTheme();
 document.getElementById("userName").textContent = localStorage.getItem("userName") || "Użytkownik";
-getToken(); // Sprawdzenie tokenu na wejściu
+getToken(); 
 loadTasks();

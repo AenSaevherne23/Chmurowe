@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
+    <div id="toastContainer"></div>
+
     <div class="dashboard-container">
         <header class="main-header">
             <div class="user-profile">
                 Witaj, <span id="userName">...</span>
             </div>
             <div class="header-actions">
+                <button id="themeToggle" class="btn-outline" title="Przełącz motyw">🌙</button>
                 <button id="logoutBtn" class="btn-outline">Wyloguj</button>
                 <button id="deleteAccountBtn" class="btn-danger-text">Usuń konto</button>
             </div>
@@ -21,11 +24,11 @@
         <main class="content">
             <section class="add-task-section">
                 <h1>Moja Lista</h1>
-                <p id="counter" class="task-counter">0/0 ukończonych</p>
+                <span id="counter" class="task-counter">0/0 ukończonych</span>
                 
                 <form id="taskForm" class="task-input-group">
-                    <input id="title" placeholder="Co masz dziś do zrobienia?" required>
-                    <button type="submit" class="btn-primary">Dodaj zadanie</button>
+                    <input id="title" placeholder="Co masz dziś do zrobienia?" required maxlength="100">
+                    <button type="submit" id="addBtn" class="btn-primary">Dodaj zadanie</button>
                 </form>
             </section>
 
@@ -34,6 +37,20 @@
                     </div>
             </section>
         </main>
+    </div>
+
+    <div id="customModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="modalTitle">Tytuł</h3>
+            <p id="modalDescription">Opis operacji...</p>
+            <div id="modalInputContainer" class="hidden">
+                <input id="modalInput" type="text" class="modal-field">
+            </div>
+            <div class="modal-actions">
+                <button id="modalCancel" class="btn-outline">Anuluj</button>
+                <button id="modalConfirm" class="btn-primary">Potwierdź</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="/public/script.js"></script>
