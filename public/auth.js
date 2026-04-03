@@ -56,7 +56,6 @@ tabRegister.addEventListener("click", () => {
 
 async function handleAuth(endpoint, body, resultId) {
     const resultElement = document.getElementById(resultId);
-    // Czyścimy poprzednie wiadomości
     resultElement.textContent = "Łączenie...";
     resultElement.style.color = "var(--text-muted)";
 
