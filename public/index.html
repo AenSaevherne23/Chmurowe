@@ -6,31 +6,27 @@
 <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
-
 <h1>Lista zadań</h1>
 <div id="userInfo">
     <span id="userName"></span>
     <button id="logoutBtn">Wyloguj</button>
 </div>
+<p id="counter"></p>
 <form id="taskForm">
   <input id="title" placeholder="Nowe zadanie">
   <button>Dodaj</button>
 </form>
-
 <table id="tasksTable">
   <thead>
     <tr>
       <th>Wykonane</th>
       <th>Zadanie</th>
+      <th>Data dodania</th>
       <th>Akcje</th>
     </tr>
   </thead>
-  <tbody>
-    <!-- wiersze z zadaniami będą wstrzyknięte przez JS -->
-  </tbody>
+  <tbody></tbody>
 </table>
-
 <script type="module" src="/public/script.js"></script>
-
 </body>
 </html>

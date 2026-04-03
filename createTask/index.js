@@ -30,7 +30,8 @@ module.exports = async function (context, req) {
             type: "todo",
             title: title.trim(),
             completed: false,
-            userId: user.userId
+            userId: user.userId,
+            createdAt: new Date().toISOString()
         };
 
         const { resource } = await container.items.create(task);

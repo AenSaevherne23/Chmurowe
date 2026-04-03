@@ -41,6 +41,18 @@ async function loadTasks() {
     }
 
     const tasks = await res.json();
+
+    // Sortowanie — nieukończone na górze
+    tasks.sort((a, b) => {
+        if (a.completed === b.completed) return 0;
+        return a.completed ? 1 : -1;
+    });
+
+    // Licznik
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    document.getElementById("counter").textContent = `${completed}/${total} ukończonych`;
+
     const tbody = document.querySelector("#tasksTable tbody");
     tbody.innerHTML = "";
 
@@ -64,6 +76,15 @@ async function loadTasks() {
         const tdTitle = document.createElement("td");
         tdTitle.textContent = task.title;
         if (task.completed) tdTitle.style.textDecoration = "line-through";
+
+        // Data dodania
+        const tdDate = document.createElement("td");
+        if (task.createdAt) {
+            const date = new Date(task.createdAt);
+            tdDate.textContent = date.toLocaleString("pl-PL");
+        } else {
+            tdDate.textContent = "—";
+        }
 
         const tdActions = document.createElement("td");
 
@@ -95,6 +116,7 @@ async function loadTasks() {
         tdActions.appendChild(edit);
         tr.appendChild(tdCheckbox);
         tr.appendChild(tdTitle);
+        tr.appendChild(tdDate);
         tr.appendChild(tdActions);
         tbody.appendChild(tr);
     });
