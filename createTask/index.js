@@ -1,4 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
+const { verifyToken } = require("../shared/auth");
 
 const client = new CosmosClient({
     endpoint: process.env.COSMOS_DB_ENDPOINT,
@@ -8,15 +9,17 @@ const databaseId = process.env.DATABASE_ID;
 const containerId = process.env.CONTAINER_ID;
 
 module.exports = async function (context, req) {
+    const user = verifyToken(req);
+    if (!user) {
+        context.res = { status: 401, body: { message: "Brak autoryzacji" } };
+        return;
+    }
+
     try {
-        const { title, userId } = req.body;
+        const { title } = req.body;
 
         if (!title || title.trim() === "") {
             context.res = { status: 400, body: { message: "Brak tytułu" } };
-            return;
-        }
-        if (!userId) {
-            context.res = { status: 400, body: { message: "Brak userId" } };
             return;
         }
 
@@ -27,7 +30,7 @@ module.exports = async function (context, req) {
             type: "todo",
             title: title.trim(),
             completed: false,
-            userId: userId
+            userId: user.userId
         };
 
         const { resource } = await container.items.create(task);

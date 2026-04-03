@@ -13,9 +13,7 @@
         <button type="submit">Zarejestruj</button>
     </form>
     <p id="registerResult"></p>
-
     <hr>
-
     <h2>Logowanie</h2>
     <form id="loginForm">
         <input id="loginEmail" type="email" placeholder="Email" required /><br><br>
@@ -42,7 +40,7 @@
             document.getElementById("registerResult").textContent = JSON.stringify(data);
 
             if (res.ok) {
-                localStorage.setItem("userId", data.id);
+                localStorage.setItem("token", data.token);
                 localStorage.setItem("userName", data.name);
                 window.location.href = "index.html";
             }
@@ -62,7 +60,7 @@
             document.getElementById("loginResult").textContent = JSON.stringify(data);
 
             if (res.ok) {
-                localStorage.setItem("userId", data.id);
+                localStorage.setItem("token", data.token);
                 localStorage.setItem("userName", data.name);
                 window.location.href = "index.html";
             }

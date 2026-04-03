@@ -1,5 +1,6 @@
 const { CosmosClient } = require("@azure/cosmos");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const client = new CosmosClient({
     endpoint: process.env.COSMOS_DB_ENDPOINT,
@@ -40,7 +41,14 @@ module.exports = async function (context, req) {
         };
 
         const { resource } = await container.items.create(user);
-        context.res = { status: 201, body: { id: resource.id, name: resource.name, email: resource.email } };
+
+        const token = jwt.sign(
+            { userId: resource.id, email: resource.email, name: resource.name },
+            process.env.JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        context.res = { status: 201, body: { token, id: resource.id, name: resource.name, email: resource.email } };
     } catch (err) {
         context.log(err);
         context.res = { status: 500, body: { message: "Błąd rejestracji" } };

@@ -1,5 +1,6 @@
 const { CosmosClient } = require("@azure/cosmos");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const client = new CosmosClient({
     endpoint: process.env.COSMOS_DB_ENDPOINT,
@@ -36,8 +37,13 @@ module.exports = async function (context, req) {
             return;
         }
 
-        const { id, name, email: userEmail } = user;
-        context.res = { status: 200, body: { id, name, email: userEmail } };
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, name: user.name },
+            process.env.JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        context.res = { status: 200, body: { token, id: user.id, name: user.name, email: user.email } };
     } catch (err) {
         context.log(err);
         context.res = { status: 500, body: { message: "Błąd logowania" } };
