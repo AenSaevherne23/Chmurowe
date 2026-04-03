@@ -1,4 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
+const bcrypt = require("bcryptjs");
 
 const client = new CosmosClient({
     endpoint: process.env.COSMOS_DB_ENDPOINT,
@@ -18,7 +19,6 @@ module.exports = async function (context, req) {
 
         const container = client.database(databaseId).container(containerId);
 
-        // Sprawdź czy email już istnieje
         const { resources } = await container.items.query({
             query: "SELECT * FROM c WHERE c.type = 'user' AND c.email = @email",
             parameters: [{ name: "@email", value: email }]
@@ -29,17 +29,18 @@ module.exports = async function (context, req) {
             return;
         }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = {
             id: "user_" + Date.now().toString(),
             type: "user",
             name,
             email,
-            password
+            password: hashedPassword
         };
 
         const { resource } = await container.items.create(user);
-        const { id, name: userName, email: userEmail } = resource;
-        context.res = { status: 201, body: { id, name: userName, email: userEmail } };
+        context.res = { status: 201, body: { id: resource.id, name: resource.name, email: resource.email } };
     } catch (err) {
         context.log(err);
         context.res = { status: 500, body: { message: "Błąd rejestracji" } };

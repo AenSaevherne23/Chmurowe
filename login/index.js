@@ -1,4 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
+const bcrypt = require("bcryptjs");
 
 const client = new CosmosClient({
     endpoint: process.env.COSMOS_DB_ENDPOINT,
@@ -24,8 +25,13 @@ module.exports = async function (context, req) {
         }).fetchAll();
 
         const user = resources[0];
+        if (!user) {
+            context.res = { status: 401, body: { message: "Nieprawidłowe dane" } };
+            return;
+        }
 
-        if (!user || user.password !== password) {
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
             context.res = { status: 401, body: { message: "Nieprawidłowe dane" } };
             return;
         }
