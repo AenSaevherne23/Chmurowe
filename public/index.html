@@ -1,32 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-<meta charset="UTF-8">
-<title>ToDo</title>
-<link rel="stylesheet" href="/public/style.css">
+    <meta charset="UTF-8">
+    <title>ToDo - Panel Użytkownika</title>
+    <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
-<h1>Lista zadań</h1>
-<div id="userInfo">
-    <span id="userName"></span>
-    <button id="logoutBtn">Wyloguj</button>
-</div>
-<p id="counter"></p>
-<form id="taskForm">
-  <input id="title" placeholder="Nowe zadanie">
-  <button>Dodaj</button>
-</form>
-<table id="tasksTable">
-  <thead>
-    <tr>
-      <th>Wykonane</th>
-      <th>Zadanie</th>
-      <th>Data dodania</th>
-      <th>Akcje</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-<script type="module" src="/public/script.js"></script>
+    <h1>Lista zadań</h1>
+    
+    <div id="userInfo">
+        <span id="userName"></span>
+        <button id="logoutBtn">Wyloguj</button>
+        <button id="deleteAccountBtn" style="background-color: #d9534f; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 10px;">
+            Usuń konto
+        </button>
+    </div>
+
+    <p id="counter"></p>
+
+    <form id="taskForm">
+        <input id="title" placeholder="Nowe zadanie" required>
+        <button type="submit">Dodaj</button>
+    </form>
+
+    <table id="tasksTable">
+        <thead>
+            <tr>
+                <th>Wykonane</th>
+                <th>Zadanie</th>
+                <th>Data dodania</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script type="module" src="/public/script.js"></script>
 </body>
 </html>
