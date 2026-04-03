@@ -1,21 +1,33 @@
-// script.js
 import { BASE_URL, API_KEY } from './config.js';
 
-async function loadTasks() {
-    const res = await fetch(`${BASE_URL}/tasks?code=${API_KEY}`);
-    const tasks = await res.json();
+// Pobierz userId z localStorage (zapisany po logowaniu)
+function getUserId() {
+    return localStorage.getItem("userId");
+}
 
+document.getElementById("userName").textContent = localStorage.getItem("userName") || "";
+
+
+
+async function loadTasks() {
+    const userId = getUserId();
+    if (!userId) {
+        alert("Nie jesteś zalogowany!");
+        window.location.href = "rejestracja.html";
+        return;
+    }
+
+    const res = await fetch(`${BASE_URL}/tasks?userId=${userId}&code=${API_KEY}`);
+    const tasks = await res.json();
     const tbody = document.querySelector("#tasksTable tbody");
     tbody.innerHTML = "";
 
     tasks.forEach(task => {
         const tr = document.createElement("tr");
-
         const tdCheckbox = document.createElement("td");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.completed;
-
         checkbox.onclick = async () => {
             await fetch(`${BASE_URL}/tasks/${task.id}?code=${API_KEY}`, {
                 method: "PUT",
@@ -31,7 +43,6 @@ async function loadTasks() {
         if (task.completed) tdTitle.style.textDecoration = "line-through";
 
         const tdActions = document.createElement("td");
-
         const del = document.createElement("button");
         del.textContent = "Usuń";
         del.onclick = async () => {
@@ -65,16 +76,22 @@ async function loadTasks() {
 document.getElementById("taskForm").addEventListener("submit", async e => {
     e.preventDefault();
     const title = document.getElementById("title").value.trim();
-    if (!title) return;
+    const userId = getUserId();
+    if (!title || !userId) return;
 
     await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ title, userId })
     });
-
     document.getElementById("title").value = "";
     loadTasks();
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    window.location.href = "/public/rejestracja.html";
 });
 
 loadTasks();

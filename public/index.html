@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>ToDo</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
 
 <h1>Lista zadań</h1>
-
+<div id="userInfo">
+    <span id="userName"></span>
+    <button id="logoutBtn">Wyloguj</button>
+</div>
 <form id="taskForm">
   <input id="title" placeholder="Nowe zadanie">
   <button>Dodaj</button>
@@ -27,7 +30,7 @@
   </tbody>
 </table>
 
-<script type="module" src="script.js"></script>
+<script type="module" src="/public/script.js"></script>
 
 </body>
 </html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Logowanie / Rejestracja</title>
+</head>
+<body>
+    <h2>Rejestracja</h2>
+    <form id="registerForm">
+        <input id="name" placeholder="Imię" required /><br><br>
+        <input id="email" type="email" placeholder="Email" required /><br><br>
+        <input id="password" type="password" placeholder="Hasło" required /><br><br>
+        <button type="submit">Zarejestruj</button>
+    </form>
+    <p id="registerResult"></p>
+
+    <hr>
+
+    <h2>Logowanie</h2>
+    <form id="loginForm">
+        <input id="loginEmail" type="email" placeholder="Email" required /><br><br>
+        <input id="loginPassword" type="password" placeholder="Hasło" required /><br><br>
+        <button type="submit">Zaloguj</button>
+    </form>
+    <p id="loginResult"></p>
+
+    <script type="module">
+        import { BASE_URL, API_KEY } from './config.js';
+
+        document.getElementById("registerForm").addEventListener("submit", async e => {
+            e.preventDefault();
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const res = await fetch(`${BASE_URL}/auth/register?code=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password })
+            });
+            const data = await res.json();
+            document.getElementById("registerResult").textContent = JSON.stringify(data);
+
+            if (res.ok) {
+                localStorage.setItem("userId", data.id);
+                localStorage.setItem("userName", data.name);
+                window.location.href = "index.html";
+            }
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", async e => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+
+            const res = await fetch(`${BASE_URL}/auth/login?code=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            document.getElementById("loginResult").textContent = JSON.stringify(data);
+
+            if (res.ok) {
+                localStorage.setItem("userId", data.id);
+                localStorage.setItem("userName", data.name);
+                window.location.href = "index.html";
+            }
+        });
+    </script>
+</body>
+</html>
