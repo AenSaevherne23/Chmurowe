@@ -2,38 +2,39 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>ToDo - Panel Użytkownika</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twoje Zadania</title>
     <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
-    <h1>Lista zadań</h1>
-    
-    <div id="userInfo">
-        <span id="userName"></span>
-        <button id="logoutBtn">Wyloguj</button>
-        <button id="deleteAccountBtn" style="background-color: #d9534f; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 10px;">
-            Usuń konto
-        </button>
+    <div class="dashboard-container">
+        <header class="main-header">
+            <div class="user-profile">
+                Witaj, <span id="userName">...</span>
+            </div>
+            <div class="header-actions">
+                <button id="logoutBtn" class="btn-outline">Wyloguj</button>
+                <button id="deleteAccountBtn" class="btn-danger-text">Usuń konto</button>
+            </div>
+        </header>
+
+        <main class="content">
+            <section class="add-task-section">
+                <h1>Moja Lista</h1>
+                <p id="counter" class="task-counter">0/0 ukończonych</p>
+                
+                <form id="taskForm" class="task-input-group">
+                    <input id="title" placeholder="Co masz dziś do zrobienia?" required>
+                    <button type="submit" class="btn-primary">Dodaj zadanie</button>
+                </form>
+            </section>
+
+            <section class="tasks-container">
+                <div id="tasksList" class="tasks-list">
+                    </div>
+            </section>
+        </main>
     </div>
-
-    <p id="counter"></p>
-
-    <form id="taskForm">
-        <input id="title" placeholder="Nowe zadanie" required>
-        <button type="submit">Dodaj</button>
-    </form>
-
-    <table id="tasksTable">
-        <thead>
-            <tr>
-                <th>Wykonane</th>
-                <th>Zadanie</th>
-                <th>Data dodania</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
 
     <script type="module" src="/public/script.js"></script>
 </body>

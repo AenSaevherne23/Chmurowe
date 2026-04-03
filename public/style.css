@@ -1,17 +1,195 @@
-table {
-  width: 50%;
-  border-collapse: collapse;
-  margin-top: 20px;
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --error: #ef4444;
+    --border: #e5e7eb;
 }
-th, td {
-  border: 1px solid #999;
-  padding: 8px;
-  text-align: left;
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    line-height: 1.5;
 }
-th {
-  background-color: #eee;
+
+.dashboard-container {
+    max-width: 850px;
+    margin: 40px auto;
+    padding: 0 20px;
 }
+
+/* Header */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    padding: 20px 30px;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+}
+
+.user-profile {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Przyciski */
 button {
-  cursor: pointer;
-  margin-right: 5px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-outline {
+    background: white;
+    border-color: var(--border);
+    padding: 8px 16px;
+    color: var(--text);
+}
+
+.btn-outline:hover {
+    background: var(--bg);
+}
+
+.btn-danger-text {
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 8px;
+}
+
+.btn-danger-text:hover {
+    color: var(--error);
+}
+
+/* Formularz dodawania */
+.add-task-section h1 {
+    margin: 0 0 5px 0;
+    font-size: 32px;
+}
+
+.task-counter {
+    color: var(--text-muted);
+    margin-bottom: 25px;
+    display: block;
+}
+
+.task-input-group {
+    display: flex;
+    gap: 12px;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.task-input-group input {
+    flex: 1;
+    border: none;
+    padding: 12px 16px;
+    font-size: 16px;
+    outline: none;
+}
+
+/* Lista zadań */
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.task-item {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+}
+
+.task-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+/* Custom Checkbox */
+.checkbox-custom {
+    width: 24px;
+    height: 24px;
+    margin-right: 20px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.task-content {
+    flex: 1;
+}
+
+.task-title {
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.task-date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.task-item.completed {
+    background: #fcfcfc;
+}
+
+.task-item.completed .task-title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+/* Przyciski akcji w zadaniu */
+.task-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-action {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.btn-action:hover {
+    border-color: var(--text-muted);
+    background: white;
 }
