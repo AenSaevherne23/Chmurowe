@@ -1,5 +1,8 @@
 import { BASE_URL, API_KEY } from './config.js';
 
+// Globalna zmienna na zadania, żebyśmy mogli nimi zarządzać lokalnie bez czekania na serwer
+let localTasks = [];
+
 // --- SYSTEM POWIADOMIEŃ (TOASTS) ---
 function showToast(message, type = "success") {
     const container = document.getElementById("toastContainer");
@@ -52,7 +55,7 @@ function showModal({ title, desc, showInput = false, defaultValue = "" }) {
 function getToken() {
     const token = localStorage.getItem("token");
     if (!token) {
-        window.location.href = "/public/rejestracja.html";
+        window.location.href = "rejestracja.html";
     }
     return token;
 }
@@ -68,6 +71,7 @@ function authHeaders() {
 const themeToggle = document.getElementById("themeToggle");
 
 function initTheme() {
+    if (!themeToggle) return;
     const savedTheme = localStorage.getItem("theme") || "light";
     if (savedTheme === "dark") {
         document.documentElement.classList.add("dark-mode");
@@ -77,18 +81,20 @@ function initTheme() {
     }
 }
 
-themeToggle.addEventListener("click", () => {
-    const isDark = document.documentElement.classList.toggle("dark-mode");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-    themeToggle.textContent = isDark ? "☀️" : "🌙";
-    showToast(`Tryb ${isDark ? "ciemny" : "jasny"} aktywny`);
-});
+if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        themeToggle.textContent = isDark ? "☀️" : "🌙";
+        showToast(`Tryb ${isDark ? "ciemny" : "jasny"} aktywny`);
+    });
+}
 
 // --- OBSŁUGA SESJI I KONTA ---
 function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("userName");
-    window.location.href = "/public/rejestracja.html";
+    window.location.href = "rejestracja.html";
 }
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -107,7 +113,7 @@ document.getElementById("deleteAccountBtn").addEventListener("click", async () =
     
     if (confirmed) {
         try {
-            const res = await fetch(`${BASE_URL}/auth/user?code=${API_KEY}`, {
+            const res = await fetch(`${BASE_URL}/auth/user`, {
                 method: "DELETE",
                 headers: authHeaders()
             });
@@ -122,10 +128,21 @@ document.getElementById("deleteAccountBtn").addEventListener("click", async () =
     }
 });
 
-// --- OBSŁUGA ZADAŃ (API) ---
+// --- OBSŁUGA ZADAŃ (LOGIKA OPTIMISTIC UI) ---
+
+// Funkcja pomocnicza do odświeżania licznika i listy
+function refreshUI() {
+    localTasks.sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+    const total = localTasks.length;
+    const completed = localTasks.filter(t => t.completed).length;
+    const counter = document.getElementById("counter");
+    if (counter) counter.textContent = `${completed}/${total} ukończonych`;
+    renderTasks(localTasks);
+}
+
 async function loadTasks() {
     try {
-        const res = await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
+        const res = await fetch(`${BASE_URL}/tasks?t=${new Date().getTime()}`, {
             headers: authHeaders()
         });
 
@@ -134,14 +151,8 @@ async function loadTasks() {
             return;
         }
 
-        const tasks = await res.json();
-        tasks.sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
-
-        const total = tasks.length;
-        const completed = tasks.filter(t => t.completed).length;
-        document.getElementById("counter").textContent = `${completed}/${total} ukończonych`;
-
-        renderTasks(tasks);
+        localTasks = await res.json();
+        refreshUI();
     } catch (err) {
         showToast("Nie udało się pobrać zadań", "error");
     }
@@ -152,14 +163,16 @@ async function addTask(title) {
     btn.disabled = true;
 
     try {
-        const res = await fetch(`${BASE_URL}/tasks?code=${API_KEY}`, {
+        const res = await fetch(`${BASE_URL}/tasks`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ title })
         });
         if (res.ok) {
+            const newTask = await res.json();
+            localTasks.push(newTask);
+            refreshUI();
             showToast("Zadanie dodane!");
-            loadTasks();
         }
     } catch (err) {
         showToast("Błąd dodawania zadania", "error");
@@ -169,51 +182,57 @@ async function addTask(title) {
 }
 
 async function updateTask(id, data) {
+    // KROK 1: Lokalna zmiana (widoczna natychmiast)
+    const index = localTasks.findIndex(t => t.id === id);
+    if (index !== -1) {
+        localTasks[index] = { ...localTasks[index], ...data };
+        refreshUI();
+    }
+
     try {
-        await fetch(`${BASE_URL}/tasks/${id}?code=${API_KEY}`, {
+        // KROK 2: Synchronizacja z serwerem w tle
+        const res = await fetch(`${BASE_URL}/tasks/${id}`, {
             method: "PUT",
             headers: authHeaders(),
             body: JSON.stringify(data)
         });
-        loadTasks();
+        
+        if (!res.ok) throw new Error("API error");
     } catch (err) {
-        showToast("Błąd aktualizacji", "error");
+        showToast("Błąd synchronizacji", "error");
+        await loadTasks(); // Jeśli serwer padł, przywracamy faktyczny stan
     }
 }
 
 async function deleteTask(id) {
+    // KROK 1: Usuwamy lokalnie
+    localTasks = localTasks.filter(t => t.id !== id);
+    refreshUI();
+
     try {
-        await fetch(`${BASE_URL}/tasks/${id}?code=${API_KEY}`, {
+        // KROK 2: Usuwamy z serwera
+        const res = await fetch(`${BASE_URL}/tasks/${id}`, {
             method: "DELETE",
             headers: authHeaders()
         });
-        showToast("Zadanie usunięte");
-        loadTasks();
+        if (res.ok) {
+            showToast("Zadanie usunięte");
+        } else {
+            throw new Error("API error");
+        }
     } catch (err) {
         showToast("Błąd usuwania", "error");
+        await loadTasks();
     }
 }
 
-// --- RENDEROWANIE INTERFEJSU (PRO) ---
+// --- RENDEROWANIE INTERFEJSU ---
 function renderTasks(tasks) {
     const listContainer = document.getElementById("tasksList");
+    if (!listContainer) return;
 
     if (tasks.length === 0) {
         listContainer.innerHTML = `<div class="empty-state">🎉 Czysta karta! Dodaj pierwsze zadanie powyżej.</div>`;
-        return;
-    }
-
-    const currentIds = Array.from(listContainer.querySelectorAll('.task-item')).map(el => el.dataset.id);
-    const newIds = tasks.map(t => String(t.id));
-
-    if (JSON.stringify(currentIds) === JSON.stringify(newIds)) {
-        tasks.forEach(task => {
-            const item = listContainer.querySelector(`[data-id="${task.id}"]`);
-            if (item) {
-                item.className = `task-item ${task.completed ? 'completed' : ''}`;
-                item.querySelector(".checkbox-custom").checked = task.completed;
-            }
-        });
         return;
     }
 
@@ -223,15 +242,6 @@ function renderTasks(tasks) {
         const taskDiv = document.createElement("div");
         taskDiv.className = `task-item ${task.completed ? 'completed' : ''}`;
         taskDiv.dataset.id = task.id;
-
-        const isFresh = (new Date() - new Date(task.createdAt)) < 5000;
-        if (!isFresh) {
-            taskDiv.style.animation = 'none';
-            taskDiv.style.opacity = '1';
-        } else {
-            taskDiv.classList.add('task-item-animate');
-            taskDiv.style.animationDelay = `${index * 0.05}s`;
-        }
 
         const dateFormatted = task.createdAt 
             ? new Date(task.createdAt).toLocaleString("pl-PL", { dateStyle: 'short', timeStyle: 'short' }) 
@@ -263,7 +273,6 @@ function renderTasks(tasks) {
             });
             if (newTitle && newTitle.trim() !== "" && newTitle.trim() !== task.title) {
                 updateTask(task.id, { title: newTitle.trim() });
-                showToast("Zaktualizowano zadanie");
             }
         });
 
@@ -280,18 +289,24 @@ function renderTasks(tasks) {
 }
 
 // --- INICJALIZACJA ---
-document.getElementById("taskForm").addEventListener("submit", e => {
-    e.preventDefault();
-    const titleInput = document.getElementById("title");
-    const title = titleInput.value.trim();
-    if (title) {
-        addTask(title);
-        titleInput.value = "";
-    }
-});
+const taskForm = document.getElementById("taskForm");
+if (taskForm) {
+    taskForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const titleInput = document.getElementById("title");
+        const title = titleInput.value.trim();
+        if (title) {
+            await addTask(title);
+            titleInput.value = "";
+        }
+    });
+}
 
 // Start aplikacji
 initTheme();
-document.getElementById("userName").textContent = localStorage.getItem("userName") || "Użytkownik";
+const userNameDisplay = document.getElementById("userName");
+if (userNameDisplay) {
+    userNameDisplay.textContent = localStorage.getItem("userName") || "Użytkownik";
+}
 getToken(); 
 loadTasks();
