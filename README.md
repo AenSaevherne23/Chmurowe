@@ -2,3 +2,7 @@ Do tego, żeby to działało trzeba też przy przerzucaniu na Azure Functions mi
 Jest jakiś problem z CORS. Nie chciało mi działać, kiedy uruchamiałem plik bezpośrednio. Dlatego używałem npx serve.
 Zainstalowałem sobie też Azure Functions Core Tools (wystarczy w Google wpisać).
 
+
+- Azure Functions
+- Azure Functions Core Tools
+- cosmosDB
