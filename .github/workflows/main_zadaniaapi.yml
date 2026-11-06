@@ -78,4 +78,13 @@ jobs:
           app-name: 'ZadaniaAPI'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          
+
+      - name: Deploy frontend to Azure Blob Storage ($web)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch \
+              --account-name testba47 \
+              --destination '$web' \
+              --source ./public \
+              --overwrite true
