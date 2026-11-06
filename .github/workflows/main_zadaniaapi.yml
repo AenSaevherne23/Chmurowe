@@ -79,13 +79,8 @@ jobs:
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
-      - name: Deploy frontend to Azure Blob Storage ($web)
+      - name: Upload to Azure Blob Storage
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob upload-batch \
-              --account-name testba47 \
-              --destination "\$web" \
-              --source ./public \
-              --auth-mode login \
-              --overwrite true
+            az storage blob upload-batch --account-name testba47 --destination '$web' --source ./public --auth-mode key
