@@ -80,12 +80,8 @@ jobs:
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
       - name: Deploy frontend to Azure Blob Storage ($web)
-        uses: azure/CLI@v1
+        uses: azure/storage-blob-upload-action@v1.5.0
         with:
-          inlineScript: |
-            az storage blob upload-batch \
-              --account-name testba47 \
-              --destination '$web' \
-              --source ./public \
-              --account-key "${{ secrets.AZURE_STORAGE_KEY }}" \
-              --overwrite true
+          connection-string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          container-name: '$web'
+          source-path: './public'
