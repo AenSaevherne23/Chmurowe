@@ -85,6 +85,7 @@ jobs:
           inlineScript: |
             az storage blob upload-batch \
               --account-name testba47 \
-              --destination '$web' \
+              --destination "\$web" \
               --source ./public \
+              --auth-mode login \
               --overwrite true
