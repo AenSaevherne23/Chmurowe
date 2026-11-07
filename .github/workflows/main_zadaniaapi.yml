@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'green'   # ZMIANA: wdrożenie do zielonej aplikacji
   workflow_dispatch:
 
 env:
@@ -75,11 +76,12 @@ jobs:
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'ZadaniaAPI'
+          app-name: ${{ github.ref_name == 'green' && 'zadaniaapi-green' || 'ZadaniaAPI' }}   # ZMIANA
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
       - name: Deploy frontend to Azure Blob Storage ($web)
+        if: github.ref_name == 'main'   # ZMIANA: frontend tylko z main
         uses: azure/CLI@v1
         with:
           inlineScript: |
