@@ -1,6 +1,6 @@
 const os = require("os");
 
- const VERSION = "v2";
+ const VERSION = "v1";
 
 module.exports = async function (context, req) {
     context.res = {
