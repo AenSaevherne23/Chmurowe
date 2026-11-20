@@ -1,7 +1,7 @@
 const os = require("os");
 
-const VERSION = "v1";
-const PODATNY = true;
+const VERSION = "v2";
+const PODATNY = false;
 
 module.exports = async function (context, req) {
     context.res = {
