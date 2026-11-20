@@ -8,6 +8,11 @@ on:
     branches:
       - 'main'
       - 'green'   # ZMIANA: wdrożenie do zielonej aplikacji
+  pull_request:   # NOWE: build i test na Pull Requestach
+    branches:
+      - 'main'
+      - 'green'
+      - 'develop'
   workflow_dispatch:
 
 env:
@@ -48,6 +53,7 @@ jobs:
           path: release.zip
 
   deploy:
+    if: github.event_name != 'pull_request'   # NOWE: na PR tylko build, bez wdrożenia
     runs-on: ubuntu-latest
     needs: build
     permissions:
